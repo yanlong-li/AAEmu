@@ -1641,6 +1641,8 @@ public partial class Character : Unit, ICharacter
                     SendErrorMessage(ErrorMessageType.ClosedZone,0,false);
                     await Task.Delay(2 * 1000,_unreleasedZoneTransportedOut.Token);
                 }
+                ForceDismount();
+                await Task.Delay(200);
                 var portal = PortalManager.Instance.GetClosestReturnPortal(Connection.ActiveChar);
                 // force transported out
                 Connection.ActiveChar.BroadcastPacket(
