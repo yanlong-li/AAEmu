@@ -1741,4 +1741,40 @@ public class HousingManager : Singleton<HousingManager>
         }
         return null;
     }
+
+    /// <summary>
+    /// Returns a house where the given position falls within boundaries of the house
+    /// Some houses' alleys are set to 0, which in extreme cases may result in items being placed on the right or bottom boundary beyond the detection range.
+    /// The new detection includes the right and lower boundaries within the range.
+    /// </summary>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    /// <param name="alley">Does it include lane inspection</param>
+    /// <returns></returns>
+    public House GetHouseAtLocation(float x, float y, bool alley)
+    {
+        foreach (var h in _houses)
+        {
+            var house = h.Value;
+            var r = house.Template.GardenRadius;
+            var a = alley ? house.Template.Alley : 0;
+            // Calculate the coordinates of the upper left corner and the width and height of the rectangle
+            float left = house.Transform.World.Position.X - r + (a / 2);
+            float top = house.Transform.World.Position.Y - r + (a / 2);
+            float width = r * 2f - a;
+            float height = r * 2f - a;
+
+            // Calculate the coordinates of the bottom right corner
+            float right = left + width;
+            float bottom = top + height;
+
+            // Manually check if (x, y) is within the bounds range
+            if (x >= left && x <= right && y >= top && y <= bottom)
+            {
+                return house;
+            }
+        }
+
+        return null;
+    }
 }
