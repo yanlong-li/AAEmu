@@ -1,5 +1,6 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Commons.Utils;
+using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Network.Game;
 
@@ -19,6 +20,13 @@ public class CSTeleportEndedPacket : GamePacket
         var ori = stream.ReadBytes(16); // TODO example: 00000000 00000000 00000000 0000803F
 
         Connection.ActiveChar.DisabledSetPosition = false;
+        if (Connection.ActiveChar.Transform.WorldId == WorldManager.DefaultWorldId)
+        {
+            Connection.ActiveChar.InstanceId = WorldManager.DefaultInstanceId;
+            Connection.ActiveChar.MainWorldPosition = null;
+            IndunManager.Instance.RequestLeave(Connection.ActiveChar);
+        }
+        
         Logger.Warn("TeleportEnded, X: {0}, Y: {1}, Z: {2}", x, y, z);
 
         WorldManager.ResendVisibleObjectsToCharacter(Connection.ActiveChar);
