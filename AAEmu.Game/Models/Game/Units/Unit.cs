@@ -932,7 +932,10 @@ public class Unit : BaseUnit, IUnit
     public void SetFaction(FactionsEnum factionId)
     {
         // Keep origin faction data temporarily for arena players
-        OriginFaction = Faction;
+        if (OriginFaction == null)
+        {
+            OriginFaction = Faction;
+        }
 
         if (this is Character player)
         {
