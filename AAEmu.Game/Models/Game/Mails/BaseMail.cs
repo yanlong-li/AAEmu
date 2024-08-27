@@ -51,8 +51,10 @@ public class BaseMail
     /// <returns></returns>
     public bool CanReturnMail()
     {
-        return ((IsDelivered == false) && (Header.SenderId != Header.ReceiverId) && (Header.SenderId > 0) && ((MailType == MailType.Normal) || (MailType == MailType.Express)));
+        return (!Header.Returned && !IsDelivered && (Header.SenderId != Header.ReceiverId) && (Header.SenderId > 0) && ((MailType == MailType.Normal) || (MailType == MailType.Express)));
     }
+
+    public virtual bool FinalizeAttachments() => true;
 
     public bool ReturnToSender()
     {
@@ -71,15 +73,14 @@ public class BaseMail
         ReceiverName = Header.SenderName;
         Header.SenderId = originalReceiverId;
         Header.SenderName = originalReceiverName;
+        Header.Returned = true;
+        Header.Status = MailStatus.Unread;
+        // Return
+        Title = "[" + LocalizationManager.Instance.Get("ui_texts", "text", 634) + "]" + Title;
 
-        Send();
-
-        if ((originalSender != null) && (originalSender.IsOnline))
-            MailManager.NotifyNewMailByNameIfOnline(this, originalSender.Name);
-
-
-        // TODO
-        return true;
+        FinalizeAttachments();
+        
+        return Send();
     }
 
     public byte GetTotalAttachmentCount()

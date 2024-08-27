@@ -79,13 +79,18 @@ public class MailPlayerToPlayer : BaseMail
     /// Takes all item attachments from sender's inventory and moves them to the mail container for sending
     /// </summary>
     /// <returns></returns>
-    public bool FinalizeAttachments()
+    public override bool FinalizeAttachments()
     {
+        if (!base.FinalizeAttachments())
+        {
+            return false;
+        }
+        var receiverMailContainer = ItemManager.Instance.GetItemContainerForCharacter(Header.ReceiverId,SlotType.Mail,null,0);
         for (var i = 0; i < Body.Attachments.Count; i++)
         {
             var tempItem = Body.Attachments[i];
             // Move Item to sender's Mail ItemContainer, technically speaking this can never fail
-            if (_sender.Inventory.MailAttachments.AddOrMoveExistingItem(ItemTaskType.Invalid, tempItem))
+            if (receiverMailContainer.AddOrMoveExistingItem(ItemTaskType.Invalid, tempItem))
             {
                 _sender.SendPacket(new SCItemTaskSuccessPacket(ItemTaskType.Mail, new List<ItemTask>() { new ItemRemove(tempItem) }, new List<ulong>()));
                 // Technically not needed, I just want to sync it up

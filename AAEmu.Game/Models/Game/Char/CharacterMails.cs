@@ -58,7 +58,7 @@ public class CharacterMails
                 unreadMailCount.UpdateReceived(mail.MailType, -1);
                 mail.OpenDate = DateTime.UtcNow;
                 mail.Header.Status = MailStatus.Read;
-                mail.IsDelivered = true;
+                // mail.IsDelivered = true;
             }
             Self.SendPacket(new SCMailBodyPacket(false, isSent, mail.Body, true, unreadMailCount));
             Self.SendPacket(new SCMailStatusUpdatedPacket(isSent, id, mail.Header.Status));
@@ -89,7 +89,7 @@ public class CharacterMails
 
         mail.Body.Text = text;
         mail.Body.SendDate = DateTime.UtcNow;
-        mail.Body.RecvDate = DateTime.UtcNow;
+        mail.Body.RecvDate = DateTime.MinValue;
 
         mail.AttachMoney(money0, money1, money2);
 
@@ -147,6 +147,10 @@ public class CharacterMails
                     Self.ChangeLabor(-1, (int)ActabilityType.Commerce);
                 }
             }
+            
+            thisMail.Body.RecvDate = DateTime.UtcNow;
+            thisMail.IsDelivered = true;
+            
             if (thisMail.Body.CopperCoins > 0 && takeMoney)
             {
                 Self.ChangeMoney(SlotType.Inventory, thisMail.Body.CopperCoins);
@@ -280,26 +284,23 @@ public class CharacterMails
         }
     }
 
-    public void ReturnMail(long id)
+    public MailResult ReturnMail(long id)
     {
         if (MailManager.Instance._allPlayerMails.ContainsKey(id))
         {
             var thisMail = MailManager.Instance._allPlayerMails[id];
-            var itemSlots = new List<(SlotType slotType, byte slot)>();
-            for (var i = 0; i < MailBody.MaxMailAttachments; i++)
+
+            if (thisMail.Header.ReceiverId != Self.Id)
             {
-                var item = ItemManager.Instance.GetItemByItemId(thisMail.Body.Attachments[i].Id);
-                if (item.SlotType == SlotType.None)
-                    itemSlots.Add((0, 0));
-                else
-                    itemSlots.Add((item.SlotType, (byte)item.Slot));
+                return MailResult.ReturnsNotAllowed;
             }
 
-            SendMailToPlayer(thisMail.Header.Type, thisMail.Header.SenderName, thisMail.Header.Title, thisMail.Body.Text,
-                thisMail.Header.Attachments, thisMail.Body.CopperCoins, thisMail.Body.BillingAmount, thisMail.Body.MoneyAmount2,
-                    thisMail.Header.Extra, itemSlots);
-
-            DeleteMail(id, false);
+            if (thisMail.ReturnToSender())
+            {
+                return MailResult.Success;
+            }
+            return MailResult.ReturnsNotAllowed;
         }
+        return MailResult.CanNotFindMail;
     }
 }

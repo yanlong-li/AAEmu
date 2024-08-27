@@ -77,8 +77,8 @@ public class MailManager : Singleton<MailManager>
         {
             Logger.Trace("Send() - Assign new mail Id");
             mail.Id = GetNewMailId();
+            _allPlayerMails.Add(mail.Id, mail);
         }
-        _allPlayerMails.Add(mail.Id, mail);
         NotifyNewMailByNameIfOnline(mail, targetName);
         return true;
     }
@@ -177,7 +177,7 @@ public class MailManager : Singleton<MailManager>
                         tempMail.Header.Attachments = (byte)attachmentCount;
 
                         // Set internal delivered flag
-                        tempMail.IsDelivered = (tempMail.Body.RecvDate <= DateTime.UtcNow);
+                        tempMail.IsDelivered = (tempMail.Body.RecvDate != DateTime.MinValue && tempMail.Body.RecvDate <= DateTime.UtcNow);
                         tempMail.IsDirty = false;
 
                         // Remove from delete list if it's a recycled Id
